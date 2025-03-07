@@ -1,58 +1,91 @@
+import math
 import threading
 import tkinter as tk
 from tkinter import ttk
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+
+import Solver
 
 data = None
 
-def plot_function():
-    global canvas
 
+def plot_function():
+    """Функция построения графика."""
+    global canvas, ax, toolbar
+
+    # Очищаем предыдущий график
     for widget in frame_plot.winfo_children():
         widget.destroy()
 
     fig, ax = plt.subplots()
-    x = np.linspace(-2, 2, 400)
+    x = np.linspace(-4, 4, 800)
 
-    if selected_type.get() == "Нелинейное уравнение":
-        if selected_equation.get() == "sin(x) - x/2 = 0":
-            y = np.sin(x) - x / 2
-        elif selected_equation.get() == "x^3 - x - 1 = 0":
-            y = x ** 3 - x - 1
-        elif selected_equation.get() == "e^x - 3x = 0":
-            y = np.exp(x) - 3 * x
-        ax.plot(x, y, label=selected_equation.get())
-        ax.axhline(0, color='black', linewidth=1)
-        ax.axvline(0, color='black', linewidth=1)
-        ax.legend()
+    try:
+        if selected_type.get() == "Нелинейное уравнение":
+            equation = selected_equation.get()
 
-    elif selected_type.get() == "Система нелинейных уравнений":
-        x = np.linspace(-2, 2, 100)
-        y = np.linspace(-2, 2, 100)
-        X, Y = np.meshgrid(x, y)
+            if not equation:
+                raise ValueError("Ошибка: Уравнение не выбрано.")
 
-        if selected_system.get() == "sin(x + y) - 1.4x = 0, x^2 + y^2 = 1":
-            Z1 = np.sin(X + Y) - 1.4 * X
-            Z2 = X ** 2 + Y ** 2 - 1
-            ax.contour(X, Y, Z1, levels=[0], colors='r')
-            ax.contour(X, Y, Z2, levels=[0], colors='b')
+            if equation == "sin(x) - x/2 = 0":
+                y = np.sin(x) - x / 2
+            elif equation == "2 * x**3 + 5.75 * x ** 2 - 7.41 * x - 10.06 = 0":
+                y = 2 * x**3 + 5.75 * x ** 2 - 7.41 * x - 10.06
+            elif equation == "e^x - 3x = 0":
+                y = np.exp(x) - 3 * x
+            else:
+                raise ValueError("Ошибка: Некорректное уравнение.")
+
+            ax.plot(x, y)
+            ax.axhline(0, color='black', linewidth=1)
+            ax.axvline(0, color='black', linewidth=1)
+            ax.legend()
+
+        elif selected_type.get() == "Система нелинейных уравнений":
+            system = selected_system.get()
+
+            if not system:
+                raise ValueError("Ошибка: Система уравнений не выбрана.")
+
+            x = np.linspace(-4, 4, 100)
+            y = np.linspace(-4, 10, 100)
+            X, Y = np.meshgrid(x, y)
+
+            if system == "0.15x1^2 + 0.25x2^2 + x1 - 0.4 = 0, 0.3x1^2 + 0.2x1x2 + x2 - 0.6 = 0":
+                Z1 = 0.15 * X**2 + 0.25 * Y**2 + X - 0.4
+                Z2 = 0.3 * X**2 + 0.2 * X * Y + Y - 0.6
+                ax.contour(X, Y, Z1, levels=[0], colors='r')
+                ax.contour(X, Y, Z2, levels=[0], colors='b')
+
+            elif system == "0.8x1 + cos(x2) -1 = 0, x1^2 + 0.5x2 - 2 = 0":
+                Z1 = 0.8 * X + np.cos(Y) - 1
+                Z2 = X**2 + 0.5 * Y - 2
+                ax.contour(X, Y, Z1, levels=[0], colors='r')
+                ax.contour(X, Y, Z2, levels=[0], colors='b')
+
+            else:
+                raise ValueError("Ошибка: Некорректная система уравнений.")
+
             ax.set_title("График системы уравнений")
+
+        else:
+            raise ValueError("Ошибка: Тип задачи не выбран.")
+
+    except Exception as e:
+        print(f"Ошибка при построении графика: {e}")
+        ax.text(0.5, 0.5, str(e), horizontalalignment='center', verticalalignment='center', fontsize=12, color='red')
 
     canvas = FigureCanvasTkAgg(fig, master=frame_plot)
     canvas.get_tk_widget().pack()
+
+    toolbar = NavigationToolbar2Tk(canvas, frame_plot)
+    toolbar.update()
+    canvas.get_tk_widget().pack()
     canvas.draw()
 
-
 def solve(event=None):
-    """Выводит выбранные данные в консоль и строит график."""
-    print(f"Вы выбрали: {selected_type.get()}")
-    if selected_type.get() == "Нелинейное уравнение":
-        print(f"Уравнение: {selected_equation.get()}")
-        print(f"Метод решения: {selected_method_for_unlinear.get()}")
-    elif selected_type.get() == "Система нелинейных уравнений":
-        print(f"Система: {selected_system.get()}")
     plot_function()
 
 
@@ -63,34 +96,70 @@ def update_options(event):
     system_menu.pack_forget()
     method_label.pack_forget()
     method_menu.pack_forget()
+    interval_label.pack_forget()
+    interval_entry.pack_forget()
+    precision_label.pack_forget()
+    precision_entry.pack_forget()
+    initial_guess_label.pack_forget()
+    initial_guess_entry.pack_forget()
+
     if selected_type.get() == "Нелинейное уравнение":
         equation_label.pack()
         equation_menu.pack()
         method_label.pack()
         method_menu.pack()
+        interval_label.pack()
+        interval_entry.pack()
+        precision_label.pack()
+        precision_entry.pack()
     elif selected_type.get() == "Система нелинейных уравнений":
         system_label.pack()
         system_menu.pack()
-        method_label.pack_forget()
-        method_menu.pack_forget()
+        precision_label.pack()
+        precision_entry.pack()
+        initial_guess_label.pack()
+        initial_guess_entry.pack()  # Поле для ввода начального приближения
+
     plot_function()
 
 
-def setData():
-    global data
-    print("set data")
+def isDataCorrect():
+    """Проверка корректности введенных данных."""
     if selected_type.get() == "Нелинейное уравнение":
-        data = False, selected_equation.get(), selected_method_for_unlinear.get()
+        return all([
+            selected_equation.get().strip(),
+            selected_method_for_unlinear.get().strip(),
+            interval_entry.get().strip(),
+            precision_entry.get().strip()
+        ])
+    elif selected_type.get() == "Система нелинейных уравнений":
+        return all([
+            selected_system.get().strip(),
+            precision_entry.get().strip(),
+            initial_guess_entry.get().strip()
+        ])
+    return False
+
+
+def setData():
+    """Передача данных в Solver для решения."""
+    global data
+
+    if not isDataCorrect():
+        print("Некорректные данные! Проверьте ввод.")
+        return
+
+    if selected_type.get() == "Нелинейное уравнение":
+        data = False, selected_equation.get(), selected_method_for_unlinear.get(), interval_entry.get(), precision_entry.get()
     else:
-        data = True,selected_system.get()
+        data = True, selected_system.get(), initial_guess_entry.get(), precision_entry.get()
 
+    print(Solver.solve(data))
 
-def getData():
-    return data
 
 root = tk.Tk()
 root.title("Решение нелинейных уравнений")
-root.geometry("600x600")
+root.geometry("1000x700")
 
 frame_controls = tk.Frame(root)
 frame_controls.pack(pady=10)
@@ -102,35 +171,40 @@ selected_type = tk.StringVar()
 type_label = tk.Label(frame_controls, text="Выберите тип задачи:")
 type_label.pack()
 type_menu = ttk.Combobox(frame_controls, textvariable=selected_type,
-                             values=["Нелинейное уравнение", "Система нелинейных уравнений"])
+                         values=["Нелинейное уравнение", "Система нелинейных уравнений"])
 type_menu.pack()
 type_menu.bind("<<ComboboxSelected>>", update_options)
 
 selected_equation = tk.StringVar()
 equation_label = tk.Label(frame_controls, text="Выберите уравнение:")
 equation_menu = ttk.Combobox(frame_controls, textvariable=selected_equation,
-                                 values=["sin(x) - x/2 = 0", "x^3 - x - 1 = 0", "e^x - 3x = 0"])
+                             values=["sin(x) - x/2 = 0", "2 * x**3 + 5.75 * x ** 2 - 7.41 * x - 10.06 = 0", "e^x - 3 * x = 0"])
 equation_menu.bind("<<ComboboxSelected>>", solve)
 
 selected_system = tk.StringVar()
 system_label = tk.Label(frame_controls, text="Выберите систему уравнений:")
 system_menu = ttk.Combobox(frame_controls, textvariable=selected_system,
-                               values=["sin(x + y) - 1.4x = 0, x^2 + y^2 = 1"])
+                           values=["0.15x1^2 + 0.25x2^2 + x1 - 0.4 = 0, 0.3x1^2 + 0.2x1x2 + x2 - 0.6 = 0", "0.8x1 + cos(x2) -1 = 0, x1^2 + 0.5x2 - 2 = 0"])
 system_menu.bind("<<ComboboxSelected>>", solve)
 
 selected_method_for_unlinear = tk.StringVar()
 method_label = tk.Label(frame_controls, text="Выберите метод решения:")
-method_label.pack()
 method_menu = ttk.Combobox(frame_controls, textvariable=selected_method_for_unlinear,
-                               values=["Метод простых итераций", "Метод Ньютона", "Метод половинного деления"])
-method_menu.pack()
+                           values=["Метод простых итераций", "Метод Хорд", "Метод Cекущих"])
 method_menu.bind("<<ComboboxSelected>>", solve)
+
+interval_label = tk.Label(frame_controls, text="Введите интервал (пример: -2,2):")
+interval_entry = tk.Entry(frame_controls)
+
+precision_label = tk.Label(frame_controls, text="Введите точность (пример: 0.001):")
+precision_entry = tk.Entry(frame_controls)
+
+initial_guess_label = tk.Label(frame_controls, text="Введите начальное приближение (пример: 0.5, 0.5):")
+initial_guess_entry = tk.Entry(frame_controls)
 
 solve_button = tk.Button(frame_controls, text="Отправить", command=setData)
 solve_button.pack()
 
 
-
 def start():
-   root.mainloop()
-
+    root.mainloop()
