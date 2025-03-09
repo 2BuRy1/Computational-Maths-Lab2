@@ -11,7 +11,7 @@ def solve(data):
 
 def parse_interval(interval_str):
     try:
-        a, b = map(float, interval_str.split(','))
+        a, b = map(float, interval_str.replace(",", ".").split(';'))
         return a, b
     except ValueError:
         raise ValueError("Некорректный формат интервала. Введите два числа через запятую.")
@@ -19,18 +19,18 @@ def parse_interval(interval_str):
 
 def check_root_existence(f, a, b):
     if f(a) * f(b) > 0:
-        return "На данном интервале нет корня или их четное количество. Выберите другой интервал."
+        return "На данном интервале нет корня или несколько. Выберите другой интервал."
     return None
 
 
 def solve_by_hord(data):
     equation, interval_str, precision_str = data[1], data[3], data[4]
     a, b = parse_interval(interval_str)
-    eps = float(precision_str)
+    eps = float(precision_str.replace(",", "."))
 
     equation = equation.split("=")[0].strip().replace("^", "**")
 
-    f = lambda x: eval(equation, {"x": x, "sin": math.sin, "cos": math.cos, "exp": math.exp, "log": math.log})
+    f = lambda x: eval(equation, {"x": x, "sin": math.sin, "cos": math.cos, "exp": math.exp, "log": math.log, "e" : math.e})
     root_check = check_root_existence(f, a, b)
     if root_check:
         return root_check
@@ -39,24 +39,25 @@ def solve_by_hord(data):
     while abs(b - a) > eps:
         x_i = a - (b - a) / (f(b) - f(a)) * f(a)
         if f(x_i) == 0:
-            return x_i, f(x_i), iterations
+            result = f"Решение: {x_i}, Значение функции: {f(x_i)}, Количество итераций: {iterations}"
+            return result
         elif f(a) * f(x_i) < 0:
             b = x_i
         else:
             a = x_i
         iterations += 1
-
-    return x_i, f(x_i), iterations
+    result = f"Решение: {x_i}, Значение функции: {f(x_i)}, Количество итераций: {iterations}"
+    return result
 
 
 def solve_by_sec(data):
     equation, interval_str, precision_str = data[1], data[3], data[4]
     a, b = parse_interval(interval_str)
-    eps = float(precision_str)
+    eps = float(precision_str.replace(",", "."))
 
     equation = equation.split("=")[0].strip().replace("^", "**")
 
-    f = lambda x: eval(equation, {"x": x, "sin": math.sin, "cos": math.cos, "exp": math.exp, "log": math.log})
+    f = lambda x: eval(equation, {"x": x, "sin": math.sin, "cos": math.cos, "exp": math.exp, "log": math.log , "e" : math.e})
     root_check = check_root_existence(f, a, b)
     if root_check:
         return root_check
@@ -67,8 +68,8 @@ def solve_by_sec(data):
         x_new = x1 - (x1 - x0) / (f(x1) - f(x0)) * f(x1)
         x0, x1 = x1, x_new
         iterations += 1
-
-    return x1, f(x1), iterations
+    result = f"Решение: {x1}, Значение функции: {f(x1)}, Количество итераций: {iterations}"
+    return result
 
 
 def symbolic_derivative(equation):
@@ -81,14 +82,15 @@ def symbolic_derivative(equation):
 def solve_by_iterations(data):
     equation, interval_str, precision_str = data[1], data[3], data[4]
     a, b = parse_interval(interval_str)
-    eps = float(precision_str)
+    eps = float(precision_str.replace(",", "."))
 
     equation = equation.split("=")[0].strip().replace("^", "**")
 
-    f = lambda x: eval(equation, {"x": x, "sin": math.sin, "cos": math.cos, "exp": math.exp, "log": math.log})
+    f = lambda x: eval(equation, {"x": x, "sin": math.sin, "cos": math.cos, "exp": math.exp, "log": math.log, "e" : math.e})
     df = symbolic_derivative(equation)
-
-    lamda = -1 / max(abs(df(a)), abs(df(b)))
+    maxEl = max(df(a)), df(b)
+    lamda = 1 / max(abs(df(a)), abs(df(b)))
+    if maxEl > 0:   lamda = -1 / max(abs(df(a)), abs(df(b)))
     phi = lambda x: x + lamda * f(x)
     dphi = lambda x: 1 + lamda * df(x)
 
@@ -106,7 +108,9 @@ def solve_by_iterations(data):
         x_i = phi(x_i)
         iterations += 1
 
-    return x_i, f(x_i), iterations
+    result = f"Решение: {x_i}, Значение функции: {f(x_i)}, Количество итераций: {iterations}"
+    return result
+
 
 
 def solve_equation(data):
@@ -119,13 +123,6 @@ def solve_equation(data):
     else:
         return "Неизвестный метод."
 
-
-#--решение системы нелинейных уравнений ---
-def parse_initial_guess(guess_str):
-    try:
-        return [float(x) for x in guess_str.split(',')]
-    except ValueError:
-        raise ValueError("Некорректный формат начального приближения. Введите числа через запятую.")
 
 def check_convergence(phi_functions, initial_guess):
 
@@ -177,8 +174,8 @@ def system2_phi2(x1, x2):
 
 def solve_system(data):
     system_choice = data[1]
-    initial_guess = parse_initial_guess(data[2])
-    epsilon = float(data[3])
+    initial_guess = parse_interval(data[2])
+    epsilon = float(data[3].replace(",", "."))
 
     if system_choice == "0.15x1^2 + 0.25x2^2 + x1 - 0.4 = 0, 0.3x1^2 + 0.2x1x2 + x2 - 0.6 = 0":
         phi_functions = [system1_phi1, system1_phi2]
