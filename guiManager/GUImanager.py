@@ -1,12 +1,10 @@
-import math
-import threading
 import tkinter as tk
 from tkinter import ttk
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
-import Solver
+from solver import Solver
 
 data = None
 
@@ -18,7 +16,7 @@ def plot_function():
         widget.destroy()
 
     fig, ax = plt.subplots()
-    x = np.linspace(-4, 4, 800)
+    x = np.linspace(-3, 3, 800)
 
     try:
         if selected_type.get() == "Нелинейное уравнение":
@@ -46,8 +44,8 @@ def plot_function():
             if not system:
                 raise ValueError("Ошибка: Система уравнений не выбрана.")
 
-            x = np.linspace(-4, 4, 100)
-            y = np.linspace(-4, 10, 100)
+            x = np.linspace(-2, 2, 100)
+            y = np.linspace(-2, 2, 100)
             X, Y = np.meshgrid(x, y)
 
             if system == "0.15x1^2 + 0.25x2^2 + x1 - 0.4 = 0, 0.3x1^2 + 0.2x1x2 + x2 - 0.6 = 0":
@@ -56,9 +54,9 @@ def plot_function():
                 ax.contour(X, Y, Z1, levels=[0], colors='r')
                 ax.contour(X, Y, Z2, levels=[0], colors='b')
 
-            elif system == "0.8x1 + cos(x2) -1 = 0, x1^2 + 0.5x2 - 2 = 0":
-                Z1 = 0.8 * X + np.cos(Y) - 1
-                Z2 = X**2 + 0.5 * Y - 2
+            elif system == "2x1 - sin(x2) - 1 = 0, 3x2 - cos(x1) - 2 = 0":
+                Z1 = 2 * X - np.sin(Y) - 1
+                Z2 = 3 * Y - np.cos(X) - 2
                 ax.contour(X, Y, Z1, levels=[0], colors='r')
                 ax.contour(X, Y, Z2, levels=[0], colors='b')
 
@@ -114,13 +112,12 @@ def update_options(event):
         precision_label.pack()
         precision_entry.pack()
         initial_guess_label.pack()
-        initial_guess_entry.pack()  # Поле для ввода начального приближения
+        initial_guess_entry.pack()
 
     plot_function()
 
 
 def isDataCorrect():
-    """Проверка корректности введенных данных."""
     if selected_type.get() == "Нелинейное уравнение":
         return all([
             selected_equation.get().strip(),
@@ -187,7 +184,7 @@ equation_menu.bind("<<ComboboxSelected>>", solve)
 selected_system = tk.StringVar()
 system_label = tk.Label(frame_controls, text="Выберите систему уравнений:")
 system_menu = ttk.Combobox(frame_controls, textvariable=selected_system,
-                           values=["0.15x1^2 + 0.25x2^2 + x1 - 0.4 = 0, 0.3x1^2 + 0.2x1x2 + x2 - 0.6 = 0", "0.8x1 + cos(x2) -1 = 0, x1^2 + 0.5x2 - 2 = 0"])
+                           values=["0.15x1^2 + 0.25x2^2 + x1 - 0.4 = 0, 0.3x1^2 + 0.2x1x2 + x2 - 0.6 = 0", "2x1 - sin(x2) - 1 = 0, 3x2 - cos(x1) - 2 = 0"])
 system_menu.bind("<<ComboboxSelected>>", solve)
 
 selected_method_for_unlinear = tk.StringVar()

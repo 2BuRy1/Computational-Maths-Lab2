@@ -1,9 +1,7 @@
-import math
 import threading
-import Solver
-import FileInputManager
-import tkinter as tk
-from GUImanager import start, root
+from solver import Solver
+from fileReader import FileInputManager
+from guiManager.GUImanager import start
 import matplotlib.pyplot as plt
 import numpy as np
 

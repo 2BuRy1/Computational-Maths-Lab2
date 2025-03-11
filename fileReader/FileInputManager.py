@@ -35,7 +35,7 @@ def read_input_from_file():
                 return process_system_input(lines)
 
         except Exception as e:
-            print(f"Ошибка при чтении файла: {e}. Попробуйте снова.")
+            print(f"Ошибка при чтении файла: {e} Попробуйте снова.")
 
 
 def process_equation_input(lines):
@@ -62,7 +62,7 @@ def process_equation_input(lines):
         return False, equations[equation_choice], methods[method_choice], interval, precision
 
     except (ValueError, IndexError) as e:
-        print(f"Ошибка обработки уравнения: {e}. Попробуйте снова.")
+        print(f"Ошибка обработки уравнения: {e} Попробуйте снова.")
         return read_input_from_file()
 
 
@@ -83,36 +83,36 @@ def process_system_input(lines):
         return True, systems[system_choice], initial_guess, precision
 
     except (ValueError, IndexError) as e:
-        print(f"Ошибка обработки системы уравнений: {e}. Попробуйте снова.")
+        print(f"Ошибка обработки системы уравнений: {e} Попробуйте снова.")
         return read_input_from_file()
 
 
 def validate_interval(interval):
 
     try:
-        a, b = map(float, interval.split(","))
+        a, b = map(float, interval.replace(",",".").split(";"))
         if a >= b:
-            raise ValueError("Левый конец интервала должен быть меньше правого.")
+            raise ValueError("Ошибка в воде интервала. Левый конец интервала должен быть меньше правого.")
         return interval
     except ValueError:
-        raise ValueError("Введите два числа через запятую, например: -2,2.")
+        raise ValueError("Ошибка в воде интервала. Введите два числа через точку с запятой, например: -2;2.")
 
 
 def validate_precision(precision):
     try:
-        precision_value = float(precision)
+        precision_value = float(precision.replace(",","."))
         if precision_value <= 0:
-            raise ValueError("Точность должна быть положительным числом.")
+            raise ValueError("Ошибка в вводе точности. Точность должна быть положительным числом.")
         return precision
     except ValueError:
-        raise ValueError("Введите положительное число, например: 0.001.")
+        raise ValueError("Ошибка в вводе точности. Введите положительное число, например: 0.001.")
 
 
 def validate_initial_guess(initial_guess):
     try:
-        guess_values = list(map(float, initial_guess.split(",")))
+        guess_values = list(map(float, initial_guess.replace(",",".").split(";")))
         if len(guess_values) != 2:
-            raise ValueError("Введите два числа через запятую, например: 0.5,0.5.")
+            raise ValueError("Ошибка в воде приближения. Введите два числа через точку с запятой, например: 0.5;0.5.")
         return initial_guess
     except ValueError:
-        raise ValueError("Введите два числа через запятую, например: 0.5,0.5.")
+        raise ValueError("Ошибка в воде приближения. Введите два числа через запятую, например: 0.5;0.5.")
